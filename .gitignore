@@ -1,0 +1,34 @@
+# Python cache and environment
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+.docker.env
+.venv/
+env/
+venv/
+*.sqlite3
+*.db
+.mypy_cache/
+.vscode/
+.idea/
+.DS_Store
+*.log
+src/test.db
+src/*.db
+# ---- ALEMBIC ----
+alembic/__pycache__/
+alembic/versions/__pycache__/
+alembic/versions/*.pyc
+
+
+alembic/.cache/
+**/alembic/.cache/
+**/alembic/*cache*
+
+
+src/alembic/__pycache__/
+src/alembic/versions/__pycache__/
+src/alembic/versions/*.pyc
+src/alembic/.cache/
