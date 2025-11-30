@@ -15,7 +15,7 @@ venv/
 .idea/
 .DS_Store
 *.log
-src/test.db
+src/testdb
 src/*.db
 # ---- ALEMBIC ----
 alembic/__pycache__/
