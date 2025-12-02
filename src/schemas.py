@@ -15,19 +15,19 @@ class GetCredentials(BaseModel):
 
 class CreateScreen(BaseModel):
     Number:int
-    all_seats:List[str]
+    
 
 class CreateShowItem(BaseModel):
+    user_id:int
     show_id:int
-    seats:List[str]
-    quantity:int
-    price:int
+
+class CreateShowItemSeat(BaseModel):
+    show_item_id:int
+    seat_id:int
 
 class CreateSeat(BaseModel):
     screen_id:int
-    show_id:int
-    available_seats:List[str]
-    booked_seats:List[str]
+    seat_name:str
     price:int
 
 

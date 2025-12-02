@@ -1,10 +1,12 @@
 
+from ctypes.wintypes import SHORT
+import datetime
 import json
 from fastapi import HTTPException
-from models.screen_models import Screen,Seat,ShowItem,Show
+from models.screen_models import Screen,Seat,ShowItem,Show, ShowItemSeat
 from sqlalchemy.orm import Session
 
-from schemas import CreateScreen, CreateSeat, CreateShow, CreateShowItem
+from schemas import CreateScreen, CreateSeat, CreateShow, CreateShowItem, CreateShowItemSeat
 
 
 def create_screen(db:Session,screen:CreateScreen):
@@ -12,8 +14,7 @@ def create_screen(db:Session,screen:CreateScreen):
     if new_screen:
         raise HTTPException(status_code=400,detail="screen number taken")
     new_screen=Screen(
-        number=screen.Number,
-        all_seats=screen.all_seats
+        number=screen.Number
         
     )
     db.add(new_screen)
@@ -23,36 +24,76 @@ def create_screen(db:Session,screen:CreateScreen):
 
 
 
+
+def get_booked_seats(db:Session,show_id:int):
+    seats = db.query(ShowItemSeat.seat_id).join(ShowItem).filter(ShowItem.show_id==show_id).all()
+    return [s[0] for s in seats]
+
+def seat_exists(db:Session,show_id:int,seat_id):
+    screen_id=db.query(Show.screen_id).join(ShowItem).filter(ShowItem.show_id==show_id).scalar()
+    screen=db.query(Screen).filter(Screen.id==screen_id).first()
+    if not screen:
+        return False
+    seat=screen.seats
+
+    seat=[s.id for s in seat]
+    
+    return seat_id in seat
+
+
 def create_show_item(db:Session,item:CreateShowItem):
     
     new_item=ShowItem(
         show_id=item.show_id,
-        quantity=item.quantity,
-        seats=item.quantity
-        
+        user_id=item.user_id
     )
     db.add(new_item)
     db.commit()
 
-    return {new_item}
+    return {"total":new_item.total()}
+
+def create_show_item_seat(db:Session,item:CreateShowItemSeat):
+    show_item=db.query(ShowItem).filter(ShowItem.id==item.show_item_id).first()
+    if not show_item:
+        raise HTTPException(status_code=404, detail="show_item not found")
+    show=db.query(Show).filter(Show.id==show_item.show_id).first()
+    
+    if get_booked_seats(db,item.seat_id):
+        raise HTTPException(status_code=404, detail="seats is booked")
+    if  not seat_exists(db,show.id,item.seat_id):
+        raise HTTPException(status_code=404, detail="seat doesnt exist ")
+    if datetime.datetime.now()>show.start_time:
+        raise HTTPException(status_code=404,detail="show has started")
+    
+    show_item_seat=ShowItemSeat(
+        seat_id=item.seat_id,
+        show_item_id=item.show_item_id,
+    )
+
+    db.add(show_item_seat)
+    db.commit()
+
+    return {show_item.total()}
+    
+      
+
 
 def create_seats(db:Session,seat:CreateSeat):
-    new_seat=db.query(Seat).filter(Seat.show_id==seat.show_id).first()
+    new_seat=db.query(Seat).filter(Seat.screen_id==seat.screen_id,
+                                   Seat.seatname==seat.seat_name).first()
 
     if new_seat:
         raise HTTPException(status_code=400,detail="seats exist for given show")
     new_seat=Seat(
-        available_seats=seat.available_seats,
-        booked_seats=seat.booked_seats,
+       
         price=seat.price,
         screen_id=seat.screen_id,
-        show_id=seat.show_id
-
+        seatname=seat.seat_name
     )
     db.add(new_seat)
     db.commit()
 
-    return {"available_seats":new_seat.available_seats,"screen_id":new_seat.screen_id,"show_id":new_seat.show_id}
+    return {"screen_id":new_seat.screen_id,}
 
 def create_show(db:Session,show:CreateShow):
     new_show=db.query(Show).filter(Show.screen_id==show.screen_id,
@@ -83,24 +124,24 @@ def get_all_screens(db:Session):
     return screens
 
 def get_screen_seats(db:Session,Number:int):
-    seats=db.query(Seat).filter(Seat.screen_id==Number).first()
+    seats=db.query(Seat).filter(Seat.screen_id==Number).all()
 
    
     if not seats:
         raise HTTPException(status_code=400,detail="seats not found")
   
-    return seats
+    return [s for s in seats]
 
 
 
-def get_screen_shows(db:Session,Number:int):
-    shows=db.query(Show).filter(Show.screen_id==Number).first()
+def get_screen_shows(db:Session,screen_id:int):
+    screen=db.query(Screen).filter(Screen.id==screen_id).first()
 
-    if not shows:
-        raise HTTPException(status_code=400,detail="screen not found")
+    if not screen:
+        raise HTTPException(status_code=400,detail="show not found")
     
     
-    return shows
+    return screen.shows
 
 
 def get_all_shows(db:Session):
