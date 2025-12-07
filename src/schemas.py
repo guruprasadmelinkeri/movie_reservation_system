@@ -36,3 +36,7 @@ class CreateShow(BaseModel):
     movie_name:str
     start_time:datetime
     end_time:datetime
+
+class TicketCancel(BaseModel):
+    user_id:int
+    show_item_id:int

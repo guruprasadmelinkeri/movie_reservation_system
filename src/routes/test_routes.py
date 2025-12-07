@@ -3,8 +3,8 @@ from fastapi import APIRouter,Depends
 from sqlalchemy.orm import Session
 
 from database import get_db
-from methods.show_method import create_screen, create_seats, create_show, create_show_item, create_show_item_seat, get_all_screens, get_all_shows, get_screen_seats, get_screen_shows
-from schemas import CreateScreen, CreateSeat, CreateShow, CreateShowItem, CreateShowItemSeat
+from methods.show_method import create_screen, create_seats, create_show, create_show_item, create_show_item_seat, get_all_screens, get_all_shows, get_screen_seats, get_screen_shows, ticket_cancel
+from schemas import CreateScreen, CreateSeat, CreateShow, CreateShowItem, CreateShowItemSeat, TicketCancel
 router=APIRouter()
 @router.put("/screen")
 def screen_create(screen:CreateScreen,db:Session=Depends(get_db)):
@@ -41,3 +41,6 @@ def screen_shows_display(Number:int,db:Session=Depends(get_db)):
 @router.get("/shows")
 def shows_all(db:Session=Depends(get_db)):
     return get_all_shows(db)
+@router.delete("/show_item")
+def cancel_ticket(item:TicketCancel,db:Session=Depends(get_db)):
+    return ticket_cancel(db,item)

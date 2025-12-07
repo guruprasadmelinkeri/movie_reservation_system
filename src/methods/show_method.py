@@ -7,7 +7,7 @@ from fastapi import HTTPException
 from models.screen_models import Screen,Seat,ShowItem,Show, ShowItemSeat
 from sqlalchemy.orm import Session
 from models.user_model import User
-from schemas import CreateScreen, CreateSeat, CreateShow, CreateShowItem, CreateShowItemSeat
+from schemas import CreateScreen, CreateSeat, CreateShow, CreateShowItem, CreateShowItemSeat, TicketCancel
 
 
 def create_screen(db:Session,screen:CreateScreen):
@@ -182,7 +182,33 @@ def get_user_tickets(db: Session, user_id: int):
         result.append({
             "purchase id": t.id,
             "seats": seats,
-            "total":t.total()
+            "total":t.total(),
+            "showitem_id":t.id,
+            "show_id":t.show_id,
         })
 
     return result
+
+
+def ticket_cancel(db:Session,item:TicketCancel):
+    ticket=db.query(ShowItem).filter(ShowItem.user_id==item.user_id,ShowItem.id==item.show_item_id).first()
+
+    if not ticket:
+        raise HTTPException(status_code=500, detail="ticket not found")
+    ##show constarints
+    show=ticket.show
+    
+    if not show:
+        raise HTTPException(status_code=500, detail="show not found")
+    
+    time=datetime.datetime.now()
+
+    if show.start_time<time or show.end_time<time:
+        raise HTTPException(status_code=500,detail="time for cancellation has ellapsed")
+    db.delete(ticket)
+    db.commit()
+
+    return {"ticket":ticket.id , "show":ticket.show_id, "user":ticket.user_id}
+
+
+
