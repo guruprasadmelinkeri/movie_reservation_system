@@ -1,11 +1,12 @@
 
 from ctypes.wintypes import SHORT
+from curses.ascii import HT
 import datetime
 import json
 from fastapi import HTTPException
 from models.screen_models import Screen,Seat,ShowItem,Show, ShowItemSeat
 from sqlalchemy.orm import Session
-
+from models.user_model import User
 from schemas import CreateScreen, CreateSeat, CreateShow, CreateShowItem, CreateShowItemSeat
 
 
@@ -42,7 +43,9 @@ def seat_exists(db:Session,show_id:int,seat_id):
 
 
 def create_show_item(db:Session,item:CreateShowItem):
-    
+    new_item=db.query(ShowItem).filter(ShowItem.show_id==item.show_id,ShowItem.user_id==item.user_id).first()
+    if new_item:
+        raise HTTPException(status_code=404,detail="item exits for the show cant create new")
     new_item=ShowItem(
         show_id=item.show_id,
         user_id=item.user_id
@@ -97,13 +100,14 @@ def create_seats(db:Session,seat:CreateSeat):
 
 def create_show(db:Session,show:CreateShow):
     new_show=db.query(Show).filter(Show.screen_id==show.screen_id,
-                                   Show.movie_name==show.movie_name,
-                                   Show.end_time>show.start_time,
+                                   
+                                   Show.end_time>=show.start_time,
+                                   Show.start_time<=show.end_time,
                                    
                                    ).first()
     
-    if new_show:
-        raise HTTPException(detail="this show exists")
+    if new_show :
+        raise HTTPException(status_code=404,detail="a show exists at given screen  at this time")
     new_show=Show(
         screen_id=show.screen_id,
         movie_name=show.movie_name,
@@ -150,3 +154,35 @@ def get_all_shows(db:Session):
     if not shows:
         raise HTTPException(status_code=400,detail="no shows found")
     return shows
+
+
+def get_user_tickets(db: Session, user_id: int):
+    user = db.query(User).filter(User.id == user_id).first()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="user not found")
+
+    result = []
+
+    for t in user.tickets:
+
+        # t.seats already contains seat objects
+        s=[s.seat for s in t.seats]
+        
+        
+        
+        seats = [
+            {
+                "seat_id": seat.id,
+                "seat_name": seat.seatname
+            }
+            for seat in s
+        ]
+
+        result.append({
+            "purchase id": t.id,
+            "seats": seats,
+            "total":t.total()
+        })
+
+    return result

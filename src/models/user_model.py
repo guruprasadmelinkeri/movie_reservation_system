@@ -1,4 +1,6 @@
+from multiprocessing.heap import rebuild_arena
 from sqlalchemy import Column, Integer,String
+from sqlalchemy.orm import relationship
 from database import Base
 
 class User(Base):
@@ -6,5 +8,4 @@ class User(Base):
     id=Column(Integer,unique=True,index=True,primary_key=True)
     username=Column(String,unique=True, nullable=False)
     hashed_password=Column(String , nullable=False)
-
-
+    tickets=relationship("ShowItem")
