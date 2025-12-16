@@ -7,6 +7,7 @@ from typing import List
 
 class CreateUser(BaseModel):
     Username:str
+    email:str
     Password:str
 
 class GetCredentials(BaseModel):

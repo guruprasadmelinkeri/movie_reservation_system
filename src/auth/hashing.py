@@ -1,6 +1,4 @@
 
-import bcrypt
-bcrypt.__about__ = bcrypt
 
 from passlib.context import CryptContext
 
