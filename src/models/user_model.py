@@ -11,7 +11,7 @@ class User(Base):
     hashed_password=Column(String , nullable=False)
     tickets=relationship("ShowItem")
     refresh_token=relationship("RefreshToken",back_populates="user",cascade="all ,delete")
-
+    role=Column(String, nullable=False,default="user")
 
 class RefreshToken(Base):
     __tablename__="refresh_tokens"

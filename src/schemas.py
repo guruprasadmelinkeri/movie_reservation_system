@@ -12,6 +12,7 @@ class CreateUser(BaseModel):
 
 class GetCredentials(BaseModel):
     Username:str
+    
     Password:str
 
 class CreateScreen(BaseModel):
@@ -19,7 +20,6 @@ class CreateScreen(BaseModel):
     
 
 class CreateShowItem(BaseModel):
-    user_id:int
     show_id:int
 
 class CreateShowItemSeat(BaseModel):
